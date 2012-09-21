@@ -33,7 +33,7 @@ def main():
 
     network = Network(essid=options.essid, wmac=options.wmac)
     alg = mapped_algs[args[0]]
-    print 'wpa:', alg.run(network)
+    print alg.run(network)
 
 if __name__ == '__main__':
     main()
