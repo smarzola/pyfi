@@ -14,8 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from algorithm import WpaAlgorithm
-from algorithms.algorithm import WpaNotFound
+from algorithms.algorithm import WpaAlgorithm, WpaNotFound
 from lib.helpers import cached_property
 import os
 import re
